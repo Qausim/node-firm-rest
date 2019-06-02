@@ -1,5 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const employeeRoutes = require('./routes/employee');
 
 
 const app = express();
