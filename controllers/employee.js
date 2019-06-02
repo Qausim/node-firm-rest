@@ -20,6 +20,24 @@ const getEmployees = (request, response, next) => {
         }));
 };
 
+const getEmployee = (request, response, next) => {
+    const id = request.params.id;
+    dbConnection.dbConnect('SELECT * FROM employee WHERE id=$1;', [id])
+        .then(res => {
+            if (res.rowCount) {
+                return response.status(200).json({
+                    employee: res.rows[0]
+                });
+            }
+            const error = new Error('Not found');
+            error.status = 404;
+            throw error;
+        })
+        .catch(error => response.status(error.status || 500).json({
+            message: error.message || 'Internal server error'
+        }));
+};
+
 const postEmployee = (request, response, next) => {
     
     const email = request.body.email;
@@ -151,6 +169,7 @@ const deleteEmployee = (request, response, next) => {
 
 module.exports = {
     getEmployees,
+    getEmployee,
     postEmployee,
     updateEmployee,
     deleteEmployee
