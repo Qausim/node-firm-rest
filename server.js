@@ -1,5 +1,6 @@
 const http = require('http');
 const app = require('./app');
+require('./config/migration').createEmployeeTable();
 
 const port = 3000;
 

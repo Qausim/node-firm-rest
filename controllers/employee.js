@@ -1,5 +1,4 @@
 const {dbConnection} = require('../config/database');
-require('../config/migration').createEmployeeTable();
 const Employee = require('../models/employee');
 
 const validateEmail = email => {
