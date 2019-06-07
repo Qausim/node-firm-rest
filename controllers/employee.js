@@ -1,27 +1,30 @@
 const {dbConnection} = require('../config/database');
+require('../config/config');
 const Employee = require('../models/employee');
+
+const tableName = process.env.TABLE_NAME;
 
 const validateEmail = email => {
     return /[-a-zA-Z0-9._]+@{1}[a-zA-Z0-9]+(?:\.[a-zA-Z0-9]+)?\.[a-zA-Z]+/.test(email);
 };
 
 const validateDate = date => {
-    return /\d{4}\-(?:[0][1-9]|[1][0-2])\-(?:[0-2][1-9]|[3][01])/.test(date);
+    return /\d{4}\-(?:[0][1-9]|[1][0-2])\-(?:[0-2][1-9]|[1-3][01])/.test(date);
 };
 
 const getEmployees = (request, response, next) => {
-    dbConnection.dbConnect('SELECT * FROM employee;')
+    dbConnection.dbConnect(`SELECT * FROM ${tableName};`)
         .then(res => response.status(200).json({
             employees: res.rows
         }))
         .catch(error => response.status(500).json({
-            message: 'Unable to fetch employees'
+            error
         }));
 };
 
 const getEmployee = (request, response, next) => {
     const id = request.params.id;
-    dbConnection.dbConnect('SELECT * FROM employee WHERE id=$1;', [id])
+    dbConnection.dbConnect(`SELECT * FROM ${tableName} WHERE id=$1;`, [id])
         .then(res => {
             if (res.rowCount) {
                 return response.status(200).json({
@@ -51,12 +54,12 @@ const postEmployee = (request, response, next) => {
             message: 'Invalid dob (date of birth) format. Use the format yyyy-mm-dd'
         });
     }
-    dbConnection.dbConnect(`INSERT INTO employee (first_name, last_name, role, email, dob) VALUES
+    dbConnection.dbConnect(`INSERT INTO ${tableName} (first_name, last_name, role, email, dob) VALUES
         ($1, $2, $3, $4, $5);`, [request.body.first_name, request.body.last_name,
         request.body.role, email, dob])
         .then(res => {
             if (res.rowCount) {
-                return dbConnection.dbConnect('SELECT * FROM employee WHERE email=$1', [email]);   
+                return dbConnection.dbConnect(`SELECT * FROM ${tableName} WHERE email=$1;`, [email]);   
             }
         })
         .then(res => {
@@ -119,19 +122,20 @@ const updateEmployee = (request, response, next) => {
 
     if (querySet.length) {
         querySet.push(id);
-        queryString = `UPDATE employee SET ${queryString} WHERE id=$${querySet.length};`;
+        queryString = `UPDATE ${tableName} SET ${queryString} WHERE id=$${querySet.length};`;
         dbConnection.dbConnect(queryString, querySet)
             .then(res => {
                 if (res.rowCount) {
-                    return dbConnection.dbConnect('SELECT * FROM employee WHERE id=$1;', [id]);
+                    return dbConnection.dbConnect(`SELECT * FROM ${tableName} WHERE id=$1;`, [id]);
                 }
-                const error = new Error('Unable to update employee record');
+                const error = new Error('Not found');
+                error.status = 400;
                 throw error;
             })
             .then(res => response.status(200).json({
                 employee: res.rows[0]
             }))
-            .catch(error => response.status(500).json({
+            .catch(error => response.status(error.status || 500).json({
                 message: error.message
             }));
     } else {
@@ -144,11 +148,11 @@ const updateEmployee = (request, response, next) => {
 const deleteEmployee = (request, response, next) => {
     const id = request.params.id;
     let employee;
-    dbConnection.dbConnect('SELECT * FROM employee WHERE id=$1', [id])
+    dbConnection.dbConnect(`SELECT * FROM ${tableName} WHERE id=$1`, [id])
         .then(res => {
             if (res.rowCount) {
                 employee = res.rows[0];
-                return dbConnection.dbConnect('DELETE FROM employee WHERE id=$1;', [id]);
+                return dbConnection.dbConnect(`DELETE FROM ${tableName} WHERE id=$1;`, [id]);
             }
             const error = new Error('Not found');
             error.status = 404;
