@@ -124,8 +124,34 @@ const updateEmployee = (request, response, next) => {
     }
 };
 
+const deleteEmployee = (request, response, next) => {
+    const id = request.params.id;
+    let employee;
+    dbConnection.dbConnect('SELECT * FROM employee WHERE id=$1', [id])
+        .then(res => {
+            if (res.rowCount) {
+                employee = res.rows[0];
+                return dbConnection.dbConnect('DELETE FROM employee WHERE id=$1;', [id]);
+            }
+            const error = new Error('Not found');
+            error.status = 404;
+            throw error;
+        })
+        .then(res => {
+            if (res.rowCount) {
+                response.status(200).json({
+                    employee
+                })
+            }
+        })
+        .catch(error => response.status(error.status || 500).json({
+            message: error.message || 'Internal server error'
+        }));
+};
+
 module.exports = {
     getEmployees,
     postEmployee,
-    updateEmployee
+    updateEmployee,
+    deleteEmployee
 };
