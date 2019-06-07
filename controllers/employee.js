@@ -38,7 +38,7 @@ const postEmployee = (request, response, next) => {
         ($1, $2, $3, $4, $5);`, [request.body.first_name, request.body.last_name,
         request.body.role, email, dob])
         .then(res => {
-            if (res.command == 'INSERT') {
+            if (res.rowCount) {
                 return dbConnection.dbConnect('SELECT * FROM employee WHERE email=$1', [email]);   
             }
         })
@@ -105,7 +105,7 @@ const updateEmployee = (request, response, next) => {
         queryString = `UPDATE employee SET ${queryString} WHERE id=$${querySet.length};`;
         dbConnection.dbConnect(queryString, querySet)
             .then(res => {
-                if (res.command == 'UPDATE') {
+                if (res.rowCount) {
                     return dbConnection.dbConnect('SELECT * FROM employee WHERE id=$1;', [id]);
                 }
                 const error = new Error('Unable to update employee record');
