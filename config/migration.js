@@ -10,6 +10,16 @@ const createEmployeeTableQuery = `
         dob DATE NOT NULL
     );`;
 
+const createTestEmployeeTableQuery = `
+    CREATE TABLE IF NOT EXISTS employee_test (
+        id BIGSERIAL PRIMARY KEY NOT NULL,
+        first_name VARCHAR(50) NOT NULL,
+        last_name VARCHAR(50) NOT NULL,
+        role VARCHAR(50) NOT NULL,
+        email VARCHAR(150) UNIQUE NOT NULL,
+        dob DATE NOT NULL
+    );`;
+
 const createEmployeeTable = () => {
     dbConnection.dbConnect(createEmployeeTableQuery)
         .then(res => {
@@ -20,6 +30,17 @@ const createEmployeeTable = () => {
         .catch(error => console.log(error));
 };
 
+const createTestEmployeeTable = () => {
+    dbConnection.dbConnect(createTestEmployeeTableQuery)
+        .then(res => {
+            if (res.command == 'CREATE') {
+                console.log('Test table is live');
+            }
+        })
+        .catch(error => console.log(error));
+}
+
 module.exports = {
-    createEmployeeTable
+    createEmployeeTable,
+    createTestEmployeeTable
 };
