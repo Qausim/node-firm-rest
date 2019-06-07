@@ -38,7 +38,7 @@ const postEmployee = (request, response, next) => {
         ($1, $2, $3, $4, $5);`, [request.body.first_name, request.body.last_name,
         request.body.role, email, dob])
         .then(res => {
-            if (res.command != 'INSERT') {
+            if (res.command == 'INSERT') {
                 return dbConnection.dbConnect('SELECT * FROM employee WHERE email=$1', [email]);   
             }
         })
